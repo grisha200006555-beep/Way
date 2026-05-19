@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mission Control</title>
+<meta http-equiv="refresh" content="5">
+<style>
+  :root { --bg: #0f1014; --card: #1a1c22; --text: #e8e8e8; --muted: #888; --accent: #6ee7b7; --warn: #fbbf24; --bad: #f87171; }
+  * { box-sizing: border-box; }
+  body { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--bg); color: var(--text); margin: 0; padding: 24px; }
+  h1 { margin: 0 0 8px; font-weight: 600; font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  h2 { margin: 24px 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: var(--card); border-radius: 8px; padding: 16px; }
+  .agent { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2a2c33; }
+  .agent:last-child { border-bottom: none; }
+  .name { font-weight: 600; }
+  .role { color: var(--muted); font-size: 12px; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .idle { background: var(--muted); }
+  .thinking { background: var(--warn); }
+  .working { background: var(--accent); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td, th { padding: 6px 8px; text-align: left; border-bottom: 1px solid #2a2c33; }
+  th { color: var(--muted); font-weight: 500; }
+  .status-done { color: var(--accent); }
+  .status-failed { color: var(--bad); }
+  .status-running { color: var(--warn); }
+  .status-pending { color: var(--muted); }
+  form { display: flex; gap: 8px; margin-top: 12px; }
+  select, input, button, textarea { background: #0f1014; color: var(--text); border: 1px solid #2a2c33; border-radius: 4px; padding: 8px; font-family: inherit; }
+  textarea { flex: 1; resize: vertical; min-height: 40px; }
+  button { background: var(--accent); color: #000; border: none; font-weight: 600; cursor: pointer; padding: 8px 16px; }
+  .metrics { display: flex; gap: 24px; }
+  .metric { font-size: 14px; }
+  .metric .label { color: var(--muted); font-size: 11px; text-transform: uppercase; }
+  details summary { cursor: pointer; color: var(--muted); }
+  details pre { white-space: pre-wrap; word-break: break-word; background: #0f1014; padding: 8px; border-radius: 4px; max-height: 300px; overflow: auto; }
+</style>
+</head>
+<body>
+
+<h1>Myndex Lab · Mission Control</h1>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>Team</h2>
+    {% for name, agent in agents.items() %}
+    {% set s = states.get(name) %}
+    <div class="agent">
+      <div>
+        <div class="name">{{ name | capitalize }}</div>
+        <div class="role">{{ agent.role }}</div>
+      </div>
+      <div>
+        <span class="dot {{ s.status if s else 'idle' }}"></span>{{ s.status if s else 'offline' }}
+      </div>
+    </div>
+    {% endfor %}
+
+    <h2 style="margin-top:24px">Server</h2>
+    <div class="metrics">
+      <div class="metric"><div class="label">CPU</div>{{ metrics.cpu }}</div>
+      <div class="metric"><div class="label">RAM</div>{{ metrics.ram }}</div>
+      <div class="metric"><div class="label">Uptime</div>{{ metrics.uptime }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>New Task</h2>
+    <form method="post" action="/tasks">
+      <select name="agent">
+        {% for name in agents %}<option value="{{ name }}">{{ name }}</option>{% endfor %}
+      </select>
+      <textarea name="prompt" placeholder="What should they do?"></textarea>
+      <button type="submit">Send</button>
+    </form>
+
+    <h2 style="margin-top:24px">Queue</h2>
+    <table>
+      <tr><th>#</th><th>agent</th><th>status</th><th>prompt</th><th></th></tr>
+      {% for t in tasks %}
+      <tr>
+        <td>{{ t.id }}</td>
+        <td>{{ t.agent }}</td>
+        <td class="status-{{ t.status.value }}">{{ t.status.value }}</td>
+        <td>{{ t.prompt[:60] }}{% if t.prompt|length > 60 %}…{% endif %}</td>
+        <td>{% if t.result %}<details><summary>result</summary><pre>{{ t.result }}</pre></details>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+</div>
+
+</body>
+</html>

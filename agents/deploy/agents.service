@@ -1,0 +1,25 @@
+[Unit]
+Description=AI agent team (Alice + Sam)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=agents
+WorkingDirectory=/opt/agents
+EnvironmentFile=/opt/agents/.env
+ExecStart=/opt/agents/.venv/bin/python -m src.main
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/agents/data
+
+[Install]
+WantedBy=multi-user.target
