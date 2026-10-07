@@ -16,8 +16,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-GRAPH_HOST = os.environ.get("IG_GRAPH_HOST", "graph.facebook.com")  # или graph.instagram.com
-API_VERSION = os.environ.get("IG_API_VERSION", "v23.0")
 UPLOAD_HOST = "rupload.facebook.com"
 
 
@@ -43,7 +41,10 @@ class InstagramClient:
         self.token = token or os.environ.get("IG_ACCESS_TOKEN")
         if not self.user_id or not self.token:
             raise InstagramError("Нужны IG_USER_ID и IG_ACCESS_TOKEN")
-        self.base = f"https://{GRAPH_HOST}/{API_VERSION}"
+        # graph.facebook.com — вход через Facebook, graph.instagram.com — вход через Instagram.
+        self.host = os.environ.get("IG_GRAPH_HOST", "graph.facebook.com")
+        self.version = os.environ.get("IG_API_VERSION", "v23.0")
+        self.base = f"https://{self.host}/{self.version}"
 
     def _graph(self, path, method="GET", **params):
         params["access_token"] = self.token
@@ -54,18 +55,22 @@ class InstagramClient:
                   "share_to_feed": "true" if share_to_feed else "false"}
         if video_url:
             params["video_url"] = video_url
+        elif self.host == "graph.instagram.com":
+            # Resumable upload доступен только при входе через Facebook Login for Business.
+            raise InstagramError("С graph.instagram.com загрузка с диска не поддерживается: "
+                                 "передайте --video-url или используйте graph.facebook.com")
         else:
             params["upload_type"] = "resumable"
         if thumb_offset_ms is not None:
             params["thumb_offset"] = str(thumb_offset_ms)
-        return self._graph(f"{self.user_id}/media", method="POST", **params)["id"]
+        return self._graph(f"{self.user_id}/media", method="POST", **params)
 
-    def upload_video(self, container_id, video_path):
+    def upload_video(self, upload_uri, video_path):
         size = os.path.getsize(video_path)
         with open(video_path, "rb") as f:
             data = f.read()
         result = _request(
-            f"https://{UPLOAD_HOST}/ig-api-upload/{API_VERSION}/{container_id}",
+            upload_uri,
             method="POST", data=data, timeout=600,
             headers={"Authorization": f"OAuth {self.token}", "offset": "0",
                      "file_size": str(size), "Content-Type": "application/octet-stream"},
@@ -93,10 +98,12 @@ class InstagramClient:
 
     def post_reel(self, video_path=None, caption="", video_url=None, log=print):
         log("Создаю контейнер Reels…")
-        container = self.create_reel_container(caption, video_url=video_url)
+        created = self.create_reel_container(caption, video_url=video_url)
+        container = created["id"]
         if not video_url:
             log(f"Загружаю {video_path}…")
-            self.upload_video(container, video_path)
+            uri = created.get("uri") or f"https://{UPLOAD_HOST}/ig-api-upload/{self.version}/{container}"
+            self.upload_video(uri, video_path)
         log("Жду, пока Instagram обработает видео…")
         self.wait_until_ready(container)
         media_id = self.publish(container)

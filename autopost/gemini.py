@@ -7,9 +7,16 @@ import urllib.error
 import urllib.request
 
 API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
+
+
+# Модели читаются при каждом запросе, чтобы работали переопределения из .env.
 # Nano Banana Pro — та же модель, что во встроенной генерации картинок бота.
-IMAGE_MODEL = os.environ.get("GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview")
-TEXT_MODEL = os.environ.get("GEMINI_TEXT_MODEL", "gemini-2.5-flash")
+def _image_model():
+    return os.environ.get("GEMINI_IMAGE_MODEL", "gemini-3-pro-image-preview")
+
+
+def _text_model():
+    return os.environ.get("GEMINI_TEXT_MODEL", "gemini-2.5-flash")
 
 
 class GeminiError(RuntimeError):
@@ -53,7 +60,7 @@ def generate_image(prompt, out_path, aspect_ratio="9:16"):
             "imageConfig": {"aspectRatio": aspect_ratio},
         },
     }
-    for part in _parts(_generate(IMAGE_MODEL, body)):
+    for part in _parts(_generate(_image_model(), body)):
         data = (part.get("inlineData") or part.get("inline_data") or {}).get("data")
         if data:
             with open(out_path, "wb") as f:
@@ -80,7 +87,7 @@ def generate_scenario(topic, scenes=4):
         "contents": [{"parts": [{"text": SCENARIO_PROMPT.format(topic=topic, scenes=scenes)}]}],
         "generationConfig": {"responseMimeType": "application/json"},
     }
-    text = "".join(p.get("text", "") for p in _parts(_generate(TEXT_MODEL, body)))
+    text = "".join(p.get("text", "") for p in _parts(_generate(_text_model(), body)))
     try:
         scenario = json.loads(text)
     except json.JSONDecodeError as e:

@@ -66,7 +66,10 @@ def caption_overlay(text, out_path, font_path=None, size=72):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(find_font(font_path), size)
-    lines = _wrap(text, font, draw, W - 200)
+    lines = _wrap(text or "", font, draw, W - 200)
+    if not lines:
+        img.save(out_path)
+        return out_path
     line_h = int(size * 1.25)
     pad = 40
     box_h = line_h * len(lines) + pad * 2

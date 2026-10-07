@@ -39,6 +39,8 @@ python -m autopost.main --scenario autopost/examples/scenario.json --offline
 3. Получите долгоживущий токен с правами `instagram_business_basic` и `instagram_business_content_publish` (вход через Instagram, тогда `IG_GRAPH_HOST=graph.instagram.com`) или `instagram_basic` и `instagram_content_publish` (вход через Facebook-страницу, хост по умолчанию `graph.facebook.com`).
 4. Впишите `IG_USER_ID` и `IG_ACCESS_TOKEN` в `.env`.
 
+Загрузка видео прямо с диска работает только при входе через Facebook (`graph.facebook.com`). При входе через Instagram (`graph.instagram.com`) Meta требует публичную ссылку на mp4: передайте её через `--video-url`.
+
 Лимит Instagram — 100 публикаций через API за сутки.
 
 ## Сеть в облачной среде Claude
