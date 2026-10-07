@@ -1,0 +1,9 @@
+{
+  "caption": "Принт придумала нейросеть, а футболку можно носить уже завтра 🔥 #футболки #принты #нейросеть #мерч",
+  "scenes": [
+    {"text": "Футболка, которой нет ни у кого", "image_prompt": "Close-up of a black oversized t-shirt with a bold neon abstract print, studio lighting, vertical 9:16, no text"},
+    {"text": "Принт генерирует нейросеть по вашей идее", "image_prompt": "Designer's desk with a laptop showing colorful AI-generated artwork, cozy evening light, vertical 9:16, no text"},
+    {"text": "Печать на плотном хлопке", "image_prompt": "Screen printing process on a white cotton t-shirt, hands applying ink, macro shot, vertical 9:16, no text"},
+    {"text": "Пиши в директ — сделаем вашу", "image_prompt": "Young person wearing a graphic t-shirt on a city street at golden hour, smiling, vertical 9:16, no text"}
+  ]
+}
